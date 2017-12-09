@@ -18,7 +18,7 @@ bool buffer_inicializa(buffer *b, int cap)
   b->tam = cap;
   b->livre = cap;
   b->ocupado = 0;
-  b->proxInf = NULL;
+  b->proxInf = b->inicio;
   b->proxLivre = b->inicio;
   return true;
 }
@@ -38,13 +38,19 @@ void buffer_finaliza(buffer *buf)
   buf->livre = -1;
 }
 
-int buffRest(buffer * buf){ //calcula quanto falta para que seja necessario dar a volta no buffer
-  return (buf->inicio + buf->tam) - buf->proxLivre;
+int buffRest(buffer * buf, int i){ //calcula quanto falta para que seja necessario dar a volta no buffer, i = 1 para proxLivre e i = 2 para proxInf
+  if (i = 1){
+    return (buf->inicio + buf->tam) - buf->proxLivre;
+  }
+  if (i = 2){
+    return (buf->inicio + buf->tam) - buf->proxInf;
+  }
 }
 
 void copiaProBuf(buffer * buf, void * info, int tam){ //copia informações para dentro do buffer circular e avança a variavel buf->proxLivre
   int bufRest;
-  bufRest = buffRest(buf);
+  bufRest = buffRest(buf, 1);
+  printf("bufRest %d\n", bufRest);
   if (bufRest<tam){
     memcpy(buf->proxLivre, info, bufRest);
     info +=bufRest;
@@ -93,6 +99,35 @@ int buffer_insere_tam(buffer *buf){
     return insereTam;
 }
 
+void avancaProxInf(buffer * buf, int qnt){
+  int bufRest;
+  bufRest = buffRest(b, 2);
+  if (bufRest <= qnt){
+    buf->proxInf = buf->inicio+(qnt-bufRest);
+  }
+  else{
+    buf->proxInf += qnt;
+  }
+}
+
+void copiaDoBufAux(void * p, buffer * b, tam){
+  memcpy(p, (void*)b->proxInf, tam);
+  avancaProxInf(b,tam);
+}
+
+void copiaDoBuf(void * p, buffer * b, tam){
+  avancaProxInf(b, sizeof(int));
+  int bufRest;
+  bufRest = buffRest(b, 2);
+  if(bufRest<tam){
+    copiaDoBufAux(p, (void*)b->proxInf, bufRest);
+    copiaDoBufAux(p, (void*)b->proxInf, tam-bufRest);
+  }
+  else{
+    copiaDoBufAux(p, (void*)b->proxInf, tam);
+  }
+}
+
 // remove o próximo dado de ``buf``, colocando-o na região apontada por ``p``,
 // que tem capacidade para ``cap`` bytes. Caso o próximo dado seja maior
 // que ``cap``, os dados são truncados, e o que não couber em ``p`` é
@@ -100,7 +135,15 @@ int buffer_insere_tam(buffer *buf){
 // menor, igual ou maior que ``cap``).
 // Retorna ``true`` se for bem sucedido, e ``false`` caso contrário
 // (buffer vazio)
-bool buffer_remove(buffer *buf, void *p, int cap, int *tam);
+bool buffer_remove(buffer *buf, void *p, int cap, int *tam){
+  if (buffer_remove_tam(buf) < 0){
+    return false;
+  }
+  *tam = buffer_remove_tam(buf);
+  int qnt = (cap < *tam) ? cap : *tam; //qnt recebe o menor valor entre cap e tam
+  copiaDoBuf(p, buf, qnt);
+  return true;
+}
 
 // remove o próximo dado de ``buf``, colocando-o em uma região de memória
 // alocada internamente com o tamanho exato para conter esse dado.
@@ -109,7 +152,29 @@ bool buffer_remove(buffer *buf, void *p, int cap, int *tam);
 // Coloca em ``*tam`` o tamanho do dado retirado (que é o tamanho da
 // região alocada).
 // Retorna ``true`` se for bem sucedido e ``false`` caso contrário (buffer vazio)
-bool buffer_remove_malloc(buffer *buf, void **p, int *tam);
+bool buffer_remove_malloc(buffer *buf, void **p, int *tam){
+  if (buffer_remove_tam(buf) < 0){
+    return false;
+  }
+  *tam = buffer_remove_tam(buf);
+  void * aux;
+  aux = malloc (*tam*sizeof(int));
+  copiaDoBuf(aux,buf,*tam);
+  *p = aux;
+  return true;
+}
 
 // retorna o tamanho do próximo dado a ser retirado do buffer, ou -1 caso o buffer esteja vazio.
-int buffer_remove_tam(buffer *buf);
+int buffer_remove_tam(buffer *buf){
+  if (buf->ocupado <=0){
+    return -1;
+  }
+  int bufRest = buffRest(buf, 2);
+  if (sizeof(int) > bufRest ){
+    int* aux;
+    memcpy((void*)aux, buf->proxInf, bufRest);
+    memcpy((void*)(aux+bufRest), buf->inicio, sizeof(int)-bufRest);
+    return *aux;
+  }
+  return *(buf->proxInf);
+}
