@@ -2,7 +2,7 @@
 
 typedef struct {
   void * inicio;
-  int * proxInf;
+  void * proxInf;
   void * proxLivre;
   int tam;
   int ocupado;

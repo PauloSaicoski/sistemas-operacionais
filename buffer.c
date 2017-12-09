@@ -39,11 +39,11 @@ void buffer_finaliza(buffer *buf)
 }
 
 int buffRest(buffer * buf, int i){ //calcula quanto falta para que seja necessario dar a volta no buffer, i = 1 para proxLivre e i = 2 para proxInf
-  if (i = 1){
+  if (i == 1){
     return (buf->inicio + buf->tam) - buf->proxLivre;
   }
-  if (i = 2){
-    return (buf->inicio + buf->tam) - buf->proxInf;
+  if (i == 2){
+    return (buf->inicio + buf->tam) - (void*)buf->proxInf;
   }
 }
 
@@ -101,7 +101,7 @@ int buffer_insere_tam(buffer *buf){
 
 void avancaProxInf(buffer * buf, int qnt){
   int bufRest;
-  bufRest = buffRest(b, 2);
+  bufRest = buffRest(buf, 2);
   if (bufRest <= qnt){
     buf->proxInf = buf->inicio+(qnt-bufRest);
   }
@@ -110,12 +110,12 @@ void avancaProxInf(buffer * buf, int qnt){
   }
 }
 
-void copiaDoBufAux(void * p, buffer * b, tam){
-  memcpy(p, (void*)b->proxInf, tam);
+void copiaDoBufAux(void * p, buffer * b, int tam){
+  memcpy(p, b->proxInf, tam);
   avancaProxInf(b,tam);
 }
 
-void copiaDoBuf(void * p, buffer * b, tam){
+void copiaDoBuf(void * p, buffer * b, int tam){
   avancaProxInf(b, sizeof(int));
   int bufRest;
   bufRest = buffRest(b, 2);
@@ -170,11 +170,13 @@ int buffer_remove_tam(buffer *buf){
     return -1;
   }
   int bufRest = buffRest(buf, 2);
+  int* aux;
   if (sizeof(int) > bufRest ){
-    int* aux;
     memcpy((void*)aux, buf->proxInf, bufRest);
     memcpy((void*)(aux+bufRest), buf->inicio, sizeof(int)-bufRest);
-    return *aux;
   }
-  return *(buf->proxInf);
+  else {
+    memcpy((void*)aux, buf->proxInf, sizeof(int));
+  }
+  return *aux;
 }
