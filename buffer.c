@@ -38,13 +38,13 @@ void buffer_finaliza(buffer *buf)
   buf->livre = -1;
 }
 
-int bufRest(buffer * buf){ //calcula quanto falta para que seja necessario dar a volta no buffer
-  return (buf->inicio+buf->tam) - buf->proxLivre;
+int buffRest(buffer * buf){ //calcula quanto falta para que seja necessario dar a volta no buffer
+  return (buf->inicio + buf->tam) - buf->proxLivre;
 }
 
 void copiaProBuf(buffer * buf, void * info, int tam){ //copia informações para dentro do buffer circular e avança a variavel buf->proxLivre
   int bufRest;
-  bufRest = bufRest(buf);
+  bufRest = buffRest(buf);
   if (bufRest<tam){
     memcpy(buf->proxLivre, info, bufRest);
     info +=bufRest;
@@ -70,8 +70,9 @@ bool buffer_insere(buffer *buf, void *p, int tam)
     printf("insereTam dentro bufferInsere %d\n", buffer_insere_tam(buf));
     return false;
   }
+  int * x = (int*)buf->proxLivre;
   copiaProBuf(buf, &tam, sizeof(int));
-  printf("int tam inserido %d\n", *((int*)buf->proxLivre));
+  printf("int tam inserido %d\n", *x);
   copiaProBuf(buf, p, tam);
   printf("int tam inserido %d\n", tam);
   buf->livre -= (tam + sizeof(int));
