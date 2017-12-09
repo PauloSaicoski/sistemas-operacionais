@@ -1,5 +1,5 @@
 #include "API1.h"
-
+#include <stdio.h>
 
 // Inicializa um buffer com capacidade para ``cap`` bytes.
 // Deve ser possível usar-se quantos buffers se quiser.
@@ -27,13 +27,13 @@ bool buffer_inicializa(buffer *b, int cap){
 // A memória alocada na inicialização deve ser liberada.
 // Após esta chamada, o buffer não pode mais ser utilizado.
 void buffer_finaliza(buffer *buf){
-  free(b->inicio);
-  b->inicio = NULL;
-  b->proxInf = NULL;
-  b->proxLivre = NULL;
-  b->tam = -1;
-  b->ocupado = -1;
-  b->livre = -1;
+  free(buf->inicio);
+  buf->inicio = NULL;
+  buf->proxInf = NULL;
+  buf->proxLivre = NULL;
+  buf->tam = -1;
+  buf->ocupado = -1;
+  buf->livre = -1;
 }
 
 // insere em ``buf`` o dado apontado por ``p``, contendo ``tam`` bytes.
@@ -62,7 +62,7 @@ bool buffer_remove(buffer *buf, void *p, int cap, int *tam);
 // alocada internamente com o tamanho exato para conter esse dado.
 // altera o ponteiro apontado por ``p`` para conter o endereço dessa região.
 // a responsabilidade por liberar a memória alocada é de quem chama esta função.
-// Coloca em ``*tam`` o tamanho do dado retirado (que é o tamanho da 
+// Coloca em ``*tam`` o tamanho do dado retirado (que é o tamanho da
 // região alocada).
 // Retorna ``true`` se for bem sucedido e ``false`` caso contrário (buffer vazio)
 bool buffer_remove_malloc(buffer *buf, void **p, int *tam);
