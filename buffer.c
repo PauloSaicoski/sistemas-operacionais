@@ -120,11 +120,11 @@ void copiaDoBuf(void * p, buffer * b, int tam){
   int bufRest;
   bufRest = buffRest(b, 2);
   if(bufRest<tam){
-    copiaDoBufAux(p, (void*)b->proxInf, bufRest);
-    copiaDoBufAux(p, (void*)b->proxInf, tam-bufRest);
+    copiaDoBufAux(p, b, bufRest);
+    copiaDoBufAux(p, b, tam-bufRest);
   }
   else{
-    copiaDoBufAux(p, (void*)b->proxInf, tam);
+    copiaDoBufAux(p, b, tam);
   }
 }
 
@@ -141,6 +141,7 @@ bool buffer_remove(buffer *buf, void *p, int cap, int *tam){
   }
   *tam = buffer_remove_tam(buf);
   int qnt = (cap < *tam) ? cap : *tam; //qnt recebe o menor valor entre cap e tam
+  printf("%d\n", qnt);
   copiaDoBuf(p, buf, qnt);
   return true;
 }
