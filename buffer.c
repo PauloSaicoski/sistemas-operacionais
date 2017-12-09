@@ -5,11 +5,12 @@
 // Deve ser possível usar-se quantos buffers se quiser.
 // Retorna ``true`` caso a inicialização seja bem sucedida,
 // ``false`` em caso contrário (``cap`` inválido ou falta de memória).
-bool buffer_inicializa(buffer *b, int cap){
-  if (cap<=0)
+bool buffer_inicializa(buffer *b, int cap)
+{
+  if (cap <= 0)
     return false;
 
-  b->inicio = malloc(cap);
+  b->inicio = (void*)malloc(cap);
 
   if (b->inicio == NULL)
     return false;
@@ -26,7 +27,8 @@ bool buffer_inicializa(buffer *b, int cap){
 // Todos os dados eventualmente em seu interior são perdidos.
 // A memória alocada na inicialização deve ser liberada.
 // Após esta chamada, o buffer não pode mais ser utilizado.
-void buffer_finaliza(buffer *buf){
+void buffer_finaliza(buffer *buf)
+{
   free(buf->inicio);
   buf->inicio = NULL;
   buf->proxInf = NULL;
@@ -36,18 +38,59 @@ void buffer_finaliza(buffer *buf){
   buf->livre = -1;
 }
 
+int bufRest(buffer * buf){ //calcula quanto falta para que seja necessario dar a volta no buffer
+  return (buf->inicio+buf->tam) - buf->proxLivre;
+}
+
+void copiaProBuf(buffer * buf, void * info, int tam){ //copia informações para dentro do buffer circular e avança a variavel buf->proxLivre
+  int bufRest;
+  bufRest = bufRest(buf);
+  if (bufRest<tam){
+    memcpy(buf->proxLivre, info, bufRest);
+    info +=bufRest;
+    buf->proxLivre = buf->inicio;
+    memcpy(buf->proxLivre, info, tam-bufRest);
+    buf->proxLivre += (tam-bufRest);
+  }
+  else{
+    memcpy(buf->proxLivre, info, tam);
+    buf->proxLivre += tam;
+  }
+}
+
 // insere em ``buf`` o dado apontado por ``p``, contendo ``tam`` bytes.
 // ``tam`` pode ser 0, mas não pode ser negativo.
 // retorna ``false`` (e não altera o estado do buffer) caso o buffer não
 // tenha espaço suficiente para armazenar esse dado.
 // retorna ``true`` caso o dado tenha sido inserido no buffer.
-bool buffer_insere(buffer *buf, void *p, int tam);
+bool buffer_insere(buffer *buf, void *p, int tam)
+{
+  if (tam > buffer_insere_tam(buf) || tam < 0)
+  {
+    printf("insereTam dentro bufferInsere %d\n", buffer_insere_tam(buf));
+    return false;
+  }
+  copiaProBuf(buf, &tam, sizeof(int));
+  printf("int tam inserido %d\n", *((int*)buf->proxLivre));
+  copiaProBuf(buf, p, tam);
+  printf("int tam inserido %d\n", tam);
+  buf->livre -= (tam + sizeof(int));
+  buf->ocupado += (tam + sizeof(int));
+  return true;
+}
 
 // retorna o tamanho do maior dado que pode ser inserido no buffer
 // (considerando o espaço livre no buffer e o necessário para colocar
 // o tamanho do dado no buffer). O retorno deve ser negativo caso não seja
 // possível inserir nem mesmo um dado de tamanho 0.
-int buffer_insere_tam(buffer *buf);
+int buffer_insere_tam(buffer *buf){
+  int insereTam;
+  insereTam = buf->livre - 4;
+  if (insereTam < 0)
+    return -1;
+  else
+    return insereTam;
+}
 
 // remove o próximo dado de ``buf``, colocando-o na região apontada por ``p``,
 // que tem capacidade para ``cap`` bytes. Caso o próximo dado seja maior
