@@ -30,6 +30,8 @@ bool buffer_inicializa(buffer *b, int cap)
 void buffer_finaliza(buffer *buf)
 {
   free(buf->inicio);
+  free(buf->proxLivre);
+  free(buf);
   buf->inicio = NULL;
   buf->proxInf = NULL;
   buf->proxLivre = NULL;
@@ -50,7 +52,6 @@ int buffRest(buffer * buf, int i){ //calcula quanto falta para que seja necessar
 void copiaProBuf(buffer * buf, void * info, int tam){ //copia informações para dentro do buffer circular e avança a variavel buf->proxLivre
   int bufRest;
   bufRest = buffRest(buf, 1);
-  printf("bufRest %d\n", bufRest);
   if (bufRest<tam){
     memcpy(buf->proxLivre, info, bufRest);
     info +=bufRest;
@@ -73,14 +74,11 @@ bool buffer_insere(buffer *buf, void *p, int tam)
 {
   if (tam > buffer_insere_tam(buf) || tam < 0)
   {
-    printf("insereTam dentro bufferInsere %d\n", buffer_insere_tam(buf));
     return false;
   }
   int * x = (int*)buf->proxLivre;
   copiaProBuf(buf, &tam, sizeof(int));
-  printf("int tam inserido %d\n", *x);
   copiaProBuf(buf, p, tam);
-  printf("int tam inserido %d\n", tam);
   buf->livre -= (tam + sizeof(int));
   buf->ocupado += (tam + sizeof(int));
   return true;
@@ -141,7 +139,6 @@ bool buffer_remove(buffer *buf, void *p, int cap, int *tam){
   }
   *tam = buffer_remove_tam(buf);
   int qnt = (cap < *tam) ? cap : *tam; //qnt recebe o menor valor entre cap e tam
-  printf("%d\n", qnt);
   copiaDoBuf(p, buf, qnt);
   return true;
 }
