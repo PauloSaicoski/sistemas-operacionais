@@ -1,5 +1,7 @@
 #include "API1.h"
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 // Inicializa um buffer com capacidade para ``cap`` bytes.
 // Deve ser possível usar-se quantos buffers se quiser.
@@ -30,8 +32,6 @@ bool buffer_inicializa(buffer *b, int cap)
 void buffer_finaliza(buffer *buf)
 {
   free(buf->inicio);
-  free(buf->proxLivre);
-  free(buf);
   buf->inicio = NULL;
   buf->proxInf = NULL;
   buf->proxLivre = NULL;
@@ -168,13 +168,15 @@ int buffer_remove_tam(buffer *buf){
     return -1;
   }
   int bufRest = buffRest(buf, 2);
-  int* aux;
+  int aux2;
+  void* aux;
+  aux = &aux2;
   if (sizeof(int) > bufRest ){
-    memcpy((void*)aux, buf->proxInf, bufRest);
-    memcpy((void*)(aux+bufRest), buf->inicio, sizeof(int)-bufRest);
+    memcpy(aux, buf->proxInf, bufRest);
+    memcpy((aux+bufRest), buf->inicio, sizeof(int)-bufRest);
   }
   else {
-    memcpy((void*)aux, buf->proxInf, sizeof(int));
+    memcpy(aux, buf->proxInf, sizeof(int));
   }
-  return *aux;
+  return aux2;
 }
