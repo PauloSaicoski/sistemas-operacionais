@@ -140,6 +140,8 @@ bool buffer_remove(buffer *buf, void *p, int cap, int *tam){
   *tam = buffer_remove_tam(buf);
   int qnt = (cap < *tam) ? cap : *tam; //qnt recebe o menor valor entre cap e tam
   copiaDoBuf(p, buf, qnt);
+  buf->livre += *tam+sizeof(int);
+  buf->ocupado -= *tam+sizeof(int);
   return true;
 }
 
@@ -159,6 +161,8 @@ bool buffer_remove_malloc(buffer *buf, void **p, int *tam){
   aux = malloc (*tam*sizeof(int));
   copiaDoBuf(aux,buf,*tam);
   *p = aux;
+  buf->livre += *tam+sizeof(int);
+  buf->ocupado -= *tam+sizeof(int);
   return true;
 }
 
