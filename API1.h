@@ -1,7 +1,12 @@
 #include <stdbool.h>
 
 typedef struct {
-  // coloque aqui o que for necessário para a implementacao
+  void * inicio;
+  int * proxInf;
+  void * proxLivre;
+  int tam;
+  int ocupado;
+  int livre;
 } buffer;
 
 // Inicializa um buffer com capacidade para ``cap`` bytes.
