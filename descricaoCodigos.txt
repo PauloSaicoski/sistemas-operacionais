@@ -1,0 +1,56 @@
+variáveis da struct buffer (parte 1)
+  
+  void * inicio
+  Ponteiro para o inicio do buffer, necessário para poder implementar a característica circular do mesmo, além de guardar o endereço necessário para a desalocação.
+  
+  void * proxInf
+  Ponteiro para a posição em que se encontra o tamanho da primeira informação válida do buffer, necessário nas funções de remoção.
+
+  void * proxLivre
+  Ponteiro para a primeira posição após a ultima informação válida do buffer, necessário para as funções de inserção.
+  
+  int tam
+  Recebe o tamanho total do buffer, utilizado para implementar a característica circular do mesmo, além de servir na camada multithread para verificar caso o buffer já tenha sido finalizado.
+  
+  int ocupado
+  Recebe a quantia de bytes que estão ocupados do buffer, utilizado pela função buffer_remove_tam.
+  
+  int livre
+  Recebe a quantia de bytes que estão desocupados do buffer, utilizado pela função buffer_insere_tam.
+
+bool buffer_inicializa(buffer *b, int cap)
+Inicializa as variáveis e aloca o espaço determinado para o buffer, também confere caso o solicitado para o buffer é maior que zero e se a função malloc foi bem sucedida.
+
+void buffer_finaliza(buffer *buf)
+Define os ponteiros para NULL e os inteiros para -1, além de desalocar o espaço de memória do buffer.
+
+int buffRest(buffer * buf, int i)
+Calcula e retorna a quantia de bytes entre o endereço apontado por proxLivre ou proxInf e o fim do espaço alocado para o buffer, utilizado sempre que uma função precisa considerar a circularidade do buffer.
+
+void copiaProBuf(buffer * buf, void * info, int tam)
+Copia byte a byte as informações apontadas por info para dentro do buffer, num total de tam bytes, esta função ainda confere a necessidade de quebrar a informação e copia-la parte para o fim do buffer e parte para o inicio do mesmo, além de avançar o ponteiro proxLivre.
+
+bool buffer_insere(buffer *buf, void *p, int tam)
+Função utilizada para inserir dados no buffer. A função confere se o tamanho dos dados é um numero positivo e não superior ao tamanho disponivel no buffer. A função também é responsavel por inserir o tamanho da informação antes dos dados no buffer.
+
+
+int buffer_insere_tam(buffer *buf)
+Calcula e retorna o tamanho do maior dado que pode ser inserido no buffer, considerando o espaço necessário para alocar um int com o tamanho dos dados.
+
+void avancaProxInf(buffer * buf, int qnt)
+Avança o ponteiro proxInf em qnt bytes, considerando a circularidade do buffer.
+
+void copiaDoBufAux(void * p, buffer * b, int tam)
+Copia byte a byte os dados do buffer para o ponteiro p, num total de tam dados, chama a função avancaProxInf passando tam como argumento, dessa forma os bytes do buffer que foram copiados são agora considerados lixo eletronico.
+
+void copiaDoBuf(void * p, buffer * b, int tam)
+Esta função cuida de ajeitar os argumentos que serão passados para copiaDoBufAux, ignorando o int que precede as informações e considerando a circularidade do buffer.
+
+bool buffer_remove(buffer *buf, void *p, int cap, int *tam)
+Função utilizada para remover dados do buffer e repassa-los para o ponteiro p. A função confere a capacidade de dados da região apontada por p, porém, caso o tamanho da proxima informação seja maior que esta capacidade, o que não couber em p é perdido.
+
+bool buffer_remove_malloc(buffer *buf, void **p, int *tam)
+Função utilizada para remover dados do buffer e repassa-los para uma região de memoria alocada internamente, o ponteiro apontado por p é alterado para conter essa região.
+
+int buffer_remove_tam(buffer *buf)
+Retorna o tamanho do proximo dado no buffer, considera a possibilidade do int estar parte no fim da região do buffer e parte no inicio.
