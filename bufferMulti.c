@@ -47,7 +47,7 @@ bool bufc_insere(bufc *b, void *p, int tam){
     return false;
   }
   pthread_mutex_lock(&(b->escrita));
-  while(tam > buffer_insere_tam){
+  while(tam > buffer_insere_tam(&(b->buff))){
     pthread_mutex_lock(&(b->escritaTam));
   }
   retorno = buffer_insere(&(b->buff), p, tam);
@@ -70,7 +70,7 @@ bool bufc_remove(bufc *b, void *p, int cap, int *tam){
   if(b->cap < 0){
     return false;
   }
-  if(buffer_remove_tam < 0){
+  if(buffer_remove_tam(&(b->buff)) < 0){
     pthread_mutex_lock(&(b->leituraTam));
   }
   pthread_mutex_lock(&(b->leitura));
@@ -94,7 +94,7 @@ bool bufc_remove_malloc(bufc *b, void **p, int *tam){
   if(b->cap < 0){
     return false;
   }
-  if(buffer_remove_tam < 0){
+  if(buffer_remove_tam(&(b->buff)) < 0){
     pthread_mutex_lock(&(b->leituraTam));
   }
   pthread_mutex_lock(&(b->leitura));
