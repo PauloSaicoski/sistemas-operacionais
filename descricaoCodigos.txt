@@ -1,4 +1,4 @@
-variáveis da struct buffer (parte 1)
+Variáveis da struct buffer (parte 1)
   
   void * inicio
   Ponteiro para o inicio do buffer, necessário para poder implementar a característica circular do mesmo, além de guardar o endereço necessário para a desalocação.
@@ -17,6 +17,9 @@ variáveis da struct buffer (parte 1)
   
   int livre
   Recebe a quantia de bytes que estão desocupados do buffer, utilizado pela função buffer_insere_tam.
+
+
+Funções do buffer.c (parte 1)
 
 bool buffer_inicializa(buffer *b, int cap)
 Inicializa as variáveis e aloca o espaço determinado para o buffer, também confere caso o solicitado para o buffer é maior que zero e se a função malloc foi bem sucedida.
@@ -54,3 +57,39 @@ Função utilizada para remover dados do buffer e repassa-los para uma região d
 
 int buffer_remove_tam(buffer *buf)
 Retorna o tamanho do proximo dado no buffer, considera a possibilidade do int estar parte no fim da região do buffer e parte no inicio.
+
+
+Variáveis da struct bufc (parte 2)
+
+  pthread_mutex_t escrita
+  Utilizado para implementar a exclusão mútua dos threads de escrita.
+
+  pthread_mutex_t escritaTam
+  Utilizado para que os threads de escrita esperem o buffer ter espaço livre suficiente para seus dados.
+  
+  pthread_mutex_t leitura
+  Utilizado para implementar a exclusão mútua dos threads de leitura.
+  
+  pthread_mutex_t leituraTam
+  Utilizado para que os threads de leitura esperem o buffer ter dados a serem lidos.
+  
+  buffer buff
+  Variável da struct declarada na parte 1
+
+
+Funções do bufferMulti.c (parte 2)
+
+bool bufc_inicializa(bufc *b, int cap)
+Inicializa as variáveis do tipo mutex e chama a função buffer_inicializa.
+
+void bufc_finaliza(bufc *b)
+Verifica caso o buffer já tenha sido finalizado antes, caso contrário dá lock nas variáveis mutex escrita e leitura e então finaliza o buffer. Não deve ocorrer um deadlock pois as threads de leitura dão lock neste ultimo mutex apenas quando já existem dados no buffer para serem lidos.
+
+bool bufc_insere(bufc *b, void *p, int tam)
+Verifica caso o buffer já tenha sido finalizado, caso contrário dá lock no mutex escrita, então, caso o buffer não tenha espaço suficiente para seus dados, dá lock no mutex escritaTam, sempre que escritaTam receber unlock por um leitor a função confere novamente o espaço do buffer, dessa forma os threads de escrita sempre terão acesso ao buffer por ordem de chegada. Ao final, a função também dá unlock no mutex leituraTam.
+
+bool bufc_remove(bufc *b, void *p, int cap, int *tam)
+Verifica se o buffer esta vazio, caso esteja da lock no mutex leituraTam, após isto, dá lock no mutex leitura e chama a função buffer_remove. Ao final, a função também dá unlock no mutex escritaTam.
+
+bool bufc_remove_malloc(bufc *b, void **p, int *tam)
+Verifica se o buffer esta vazio, caso esteja da lock no mutex leituraTam, após isto, dá lock no mutex leitura e chama a função buffer_remove_malloc. Ao final, a função também dá unlock no mutex escritaTam.
