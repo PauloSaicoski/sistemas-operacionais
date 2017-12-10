@@ -138,8 +138,14 @@ bool buffer_remove(buffer *buf, void *p, int cap, int *tam){
     return false;
   }
   *tam = buffer_remove_tam(buf);
-  int qnt = (cap < *tam) ? cap : *tam; //qnt recebe o menor valor entre cap e tam
-  copiaDoBuf(p, buf, qnt);
+  if(cap < *tam){
+    copiaDoBuf(p, buf, cap);
+    avancaProxInf(buf, *tam-cap);
+  }
+  else{
+    copiaDoBuf(p, buf, *tam);
+  }
+  
   buf->livre += *tam+sizeof(int);
   buf->ocupado -= *tam+sizeof(int);
   return true;
