@@ -1,4 +1,6 @@
 #include <stdbool.h>
+#include <pthread.h>
+#include "API1.h"
 
 typedef struct {
   pthread_mutex_t escrita;

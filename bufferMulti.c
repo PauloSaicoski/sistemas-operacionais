@@ -1,6 +1,4 @@
 #include "APIMulti.h"
-#include "API1.h"
-#include <pthread.h>
 
 
 // Inicializa um buffer com capacidade para ``cap`` bytes.
