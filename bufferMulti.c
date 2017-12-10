@@ -1,13 +1,7 @@
-#include <stdbool.h>
+#include "APIMulti.h"
+#include "API1.h"
+#include <pthread.h>
 
-typedef struct {
-  pthread_mutex_t escrita;
-  pthread_mutex_t escritaTam;
-  pthread_mutex_t leitura;
-  pthread_mutex_t leituraTam;
-  buffer buff;
-  int cap;
-} bufc;
 
 // Inicializa um buffer com capacidade para ``cap`` bytes.
 // Deve ser possível usar-se quantos buffers se quiser.
@@ -15,14 +9,26 @@ typedef struct {
 // ``false`` em caso contrário (``cap`` inválido ou falta de memória).
 // Esta função só deve ser chamada uma vez para um buffer, e deve ser a 
 // primeira função chamada para esse buffer.
-bool bufc_inicializa(bufc *b, int cap);
-
+bool bufc_inicializa(bufc *b, int cap){
+  b->escrita = PTHREAD_MUTEX_INITIALIZER;
+  b->leitura = PTHREAD_MUTEX_INITIALIZER;
+  b->escritaTam = PTHREAD_MUTEX_INITIALIZER;
+  b->leituraTam = PTHREAD_MUTEX_INITIALIZER;
+  b->cap = cap;
+  return buffer_inicializa(&(b->buff), cap);
+}
 // Finaliza um buffer previamente inicializado.
 // Todos os dados eventualmente em seu interior são perdidos.
 // A memória alocada na inicialização deve ser liberada.
 // Essa função deve ser chamada uma única vez para um buffer.
 // Após esta chamada, o buffer não pode mais ser utilizado.
-void bufc_finaliza(bufc *b);
+void bufc_finaliza(bufc *b){
+  if(b->buff->tam < 0){
+    return;
+  }
+  buffer_finaliza(&(b->buff));
+  b->cap = -1;
+}
 
 // insere em ``b`` o dado apontado por ``p``, contendo ``tam`` bytes.
 // ``tam`` pode ser 0, mas não pode ser negativo.
@@ -33,7 +39,21 @@ void bufc_finaliza(bufc *b);
 // thread bloqueada em inserção neste mesmo buffer, bloqueia a thread realizando
 // esta chamada.
 // retorna ``true`` quando o dado for inserido no buffer.
-bool bufc_insere(bufc *b, void *p, int tam);
+bool bufc_insere(bufc *b, void *p, int tam){
+  bool retorno;
+  if (tam > b->cap){
+    return false;
+  }
+  while(tam > buffer_insere_tam){
+    pthread_mutex_lock(&(b->escritaTam));
+  }
+  pthread_mutex_lock(&(b->escrita));
+  retorno = buffer_insere(&(b->buff), p, tam);
+  pthread_mutex_unlock(&(b->escrita));
+  pthread_mutex_unlock(&(b->escritaTam));
+  pthread_mutex_unlock(&(b->leituraTam));
+  return retorno;
+}
 
 // remove o próximo dado de ``b``, colocando-o na região apontada por ``p``,
 // que tem capacidade para ``cap`` bytes. Caso o próximo dado seja maior
@@ -43,7 +63,20 @@ bool bufc_insere(bufc *b, void *p, int tam);
 // Retorna ``false`` se o buffer tiver sido finalizado.
 // Bloqueia a thread chamadora enquanto o buffer estiver vazio.
 // Retorna ``true`` quando for bem sucedido.
-bool bufc_remove(bufc *b, void *p, int cap, int *tam);
+bool bufc_remove(bufc *b, void *p, int cap, int *tam){
+  bool retorno;
+  if(b->cap < 0){
+    return false;
+  }
+  if(buffer_remove_tam < 0){
+    pthread_mutex_lock(&(b->leituraTam));
+  }
+  pthread_mutex_lock(&(b->leitura));
+  retorno = buffer_remove(&(b->buff), p, cap, tam);
+  pthread_mutex_unlock(&(b->leitura));
+  pthread_mutex_unlock(&(b->escritaTam));
+  return retorno;
+}
 
 // remove o próximo dado de ``b``, colocando-o em uma região de memória
 // alocada internamente com o tamanho exato para conter esse dado.
@@ -54,4 +87,17 @@ bool bufc_remove(bufc *b, void *p, int cap, int *tam);
 // Retorna ``false`` se o buffer tiver sido finalizado.
 // Bloqueia a thread chamadora enquanto o buffer estiver vazio.
 // Retorna ``true`` quando for bem sucedido.
-bool bufc_remove_malloc(bufc *b, void **p, int *tam);
+bool bufc_remove_malloc(bufc *b, void **p, int *tam){
+  bool retorno;
+  if(b->cap < 0){
+    return false;
+  }
+  if(buffer_remove_tam < 0){
+    pthread_mutex_lock(&(b->leituraTam));
+  }
+  pthread_mutex_lock(&(b->leitura));
+  retorno = buffer_remove_malloc(&(b->buff), p, tam);
+  pthread_mutex_unlock(&(b->leitura));
+  pthread_mutex_unlock(&(b->escritaTam));
+  return retorno;
+}
