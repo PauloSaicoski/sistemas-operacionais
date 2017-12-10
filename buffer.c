@@ -76,7 +76,6 @@ bool buffer_insere(buffer *buf, void *p, int tam)
   {
     return false;
   }
-  int * x = (int*)buf->proxLivre;
   copiaProBuf(buf, &tam, sizeof(int));
   copiaProBuf(buf, p, tam);
   buf->livre -= (tam + sizeof(int));
@@ -90,7 +89,7 @@ bool buffer_insere(buffer *buf, void *p, int tam)
 // possível inserir nem mesmo um dado de tamanho 0.
 int buffer_insere_tam(buffer *buf){
   int insereTam;
-  insereTam = buf->livre - 4;
+  insereTam = buf->livre - sizeof(int);
   if (insereTam < 0)
     return -1;
   else
