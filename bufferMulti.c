@@ -14,7 +14,6 @@ bool bufc_inicializa(bufc *b, int cap){
   b->leitura = PTHREAD_MUTEX_INITIALIZER;
   b->escritaTam = PTHREAD_MUTEX_INITIALIZER;
   b->leituraTam = PTHREAD_MUTEX_INITIALIZER;
-  b->cap = cap;
   return buffer_inicializa(&(b->buff), cap);
 }
 // Finaliza um buffer previamente inicializado.
@@ -29,7 +28,6 @@ void bufc_finaliza(bufc *b){
   pthread_mutex_lock(&(b->escrita));
   pthread_mutex_lock(&(b->leitura));
   buffer_finaliza(&(b->buff));
-  b->cap = -1;
 }
 
 // insere em ``b`` o dado apontado por ``p``, contendo ``tam`` bytes.
@@ -43,7 +41,7 @@ void bufc_finaliza(bufc *b){
 // retorna ``true`` quando o dado for inserido no buffer.
 bool bufc_insere(bufc *b, void *p, int tam){
   bool retorno;
-  if (tam > b->cap){
+  if (tam > b->buff->tam){
     return false;
   }
   pthread_mutex_lock(&(b->escrita));
@@ -67,7 +65,7 @@ bool bufc_insere(bufc *b, void *p, int tam){
 // Retorna ``true`` quando for bem sucedido.
 bool bufc_remove(bufc *b, void *p, int cap, int *tam){
   bool retorno;
-  if(b->cap < 0){
+  if(b->buff->tam < 0){
     return false;
   }
   if(buffer_remove_tam(&(b->buff)) < 0){
@@ -91,7 +89,7 @@ bool bufc_remove(bufc *b, void *p, int cap, int *tam){
 // Retorna ``true`` quando for bem sucedido.
 bool bufc_remove_malloc(bufc *b, void **p, int *tam){
   bool retorno;
-  if(b->cap < 0){
+  if(b->buff->tam < 0){
     return false;
   }
   if(buffer_remove_tam(&(b->buff)) < 0){

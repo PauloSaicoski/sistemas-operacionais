@@ -6,7 +6,6 @@ typedef struct {
   pthread_mutex_t leitura;
   pthread_mutex_t leituraTam;
   buffer buff;
-  int cap;
 } bufc;
 
 // Inicializa um buffer com capacidade para ``cap`` bytes.
