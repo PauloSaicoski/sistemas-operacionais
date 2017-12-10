@@ -26,6 +26,8 @@ void bufc_finaliza(bufc *b){
   if(b->buff->tam < 0){
     return;
   }
+  pthread_mutex_lock(&(b->escrita));
+  pthread_mutex_lock(&(b->leitura));
   buffer_finaliza(&(b->buff));
   b->cap = -1;
 }
@@ -44,13 +46,13 @@ bool bufc_insere(bufc *b, void *p, int tam){
   if (tam > b->cap){
     return false;
   }
+  pthread_mutex_lock(&(b->escrita));
   while(tam > buffer_insere_tam){
     pthread_mutex_lock(&(b->escritaTam));
   }
-  pthread_mutex_lock(&(b->escrita));
   retorno = buffer_insere(&(b->buff), p, tam);
+  pthread_mutex_lock(&(b->escritaTam));
   pthread_mutex_unlock(&(b->escrita));
-  pthread_mutex_unlock(&(b->escritaTam));
   pthread_mutex_unlock(&(b->leituraTam));
   return retorno;
 }
