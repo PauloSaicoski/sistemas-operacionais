@@ -1,0 +1,4 @@
+os arquivos API1.h e buffer.c são referentes a parte 1 do trabalho
+os arquivos mainTest.c e Makefile são referentes a parte 2 do trabalho, a qual utiliza os arquivos da parte 1
+os arquivos APIMulti.h e bufferMulti.c são referentes a parte 3 do trabalho
+infelizmente não desenvolvemos a parte 4 do trabalho a tempo
